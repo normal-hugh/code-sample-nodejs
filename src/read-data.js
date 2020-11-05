@@ -2,7 +2,7 @@ const AWS = require('aws-sdk');
 
 const dynamodb = new AWS.DynamoDB.DocumentClient({
   apiVersion: '2012-08-10',
-  endpoint: new AWS.Endpoint('http://192.168.0.25:3001'),
+  endpoint: new AWS.Endpoint('http://localhost:8000'),
   region: 'us-west-2',
   accessKeyId: 'accessKeyId',
   secretAccessKey: 'secretAccessKey',
@@ -50,6 +50,5 @@ exports.handler = async (event, table = tableName) => {
     }
   }).promise();
   return results.Items
-
   // TODO (extra credit) if event.studentLastName exists then query using the 'studentLastNameGsi' GSI and return the results.
 };
