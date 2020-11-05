@@ -2,13 +2,38 @@ const AWS = require('aws-sdk');
 
 const dynamodb = new AWS.DynamoDB.DocumentClient({
   apiVersion: '2012-08-10',
-  endpoint: new AWS.Endpoint('http://localhost:8000'),
+  endpoint: new AWS.Endpoint('http://192.168.0.25:3001'),
   region: 'us-west-2',
+  accessKeyId: 'accessKeyId',
+  secretAccessKey: 'secretAccessKey',
   // what could you do to improve performance?
 });
 
 const tableName = 'SchoolStudents';
 const studentLastNameGsiName = 'studentLastNameGsi';
+
+const toQuery = (params, table) => {
+  return {
+    TableName: table,
+    KeyConditionExpression: Object.keys(params).map((key) => {
+      if (key === 'studentId') {
+        return '#student = :studentID'
+      }
+      if (key === 'schoolId') {
+        return '#school = :schoolID'
+      }
+    }).join(' and '),
+    ExpressionAttributeNames: {
+      ...(params.studentId && {"#student": "studentId"}),
+      ...(params.schoolId && {"#school": "schoolId"})
+    },
+    ExpressionAttributeValues: {
+      ...(params.studentId && {":studentID": params.studentId}),
+      ...(params.schoolId && {":schoolID": params.schoolId}),
+    },
+    // Limit: 5
+  };
+}
 
 /**
  * The entry point into the lambda
@@ -18,12 +43,13 @@ const studentLastNameGsiName = 'studentLastNameGsi';
  * @param {string} event.studentId
  * @param {string} [event.studentLastName]
  */
-exports.handler = (event) => {
-  // TODO use the AWS.DynamoDB.DocumentClient to write a query against the 'SchoolStudents' table and return the results.
-  // The 'SchoolStudents' table key is composed of schoolId (partition key) and studentId (range key).
+exports.handler = async (event, table = tableName) => {
+  const results = await dynamodb.query(toQuery(event, table), (err, _) => {
+    if (err) {
+      throw new Error(err);
+    }
+  }).promise();
+  return results.Items
 
   // TODO (extra credit) if event.studentLastName exists then query using the 'studentLastNameGsi' GSI and return the results.
-
-  // TODO (extra credit) limit the amount of records returned in the query to 5 and then implement the logic to return all
-  //  pages of records found by the query (uncomment the test which exercises this functionality)
 };
