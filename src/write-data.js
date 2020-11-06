@@ -6,7 +6,7 @@ const dynamodb = new AWS.DynamoDB.DocumentClient({
   region: 'us-west-2',
   accessKeyId: 'accessKeyId',
   secretAccessKey: 'secretAccessKey',
-  // what could you do to improve performance?
+  sslEnabled: false,
 });
 
 const tableName = 'SchoolStudents';
